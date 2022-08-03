@@ -51,9 +51,11 @@ module my_cloud_run_service {
   cloudsql_connections = []
   concurrency = 80
   cpu_throttling = true
+  execution_environment = "gen2"
   cpus = 1
   entrypoint = []
   env = [{ key = "ENV_VAR_KEY", value = "ENV_VAR_VALUE" }]
+  execution_environment = "gen1"
   ingress = "all"
   labels = {}
   map_domains = []
@@ -111,12 +113,13 @@ Refer to https://cloud.google.com/run/docs/configuring/secrets for further readi
 | env.*.value           | Raw string value of the environment variable.                                                                                                                                      | optional(string)                                                                                               | `null`                                | No       |
 | env.*.secret          | Secret to populate the environment variable from. Secrets in other projects should use the `projects/{{project}}/secrets/{{secret}}` format.                                       | optional(string)                                                                                               | `null`                                | No       |
 | env.*.version         | Version to use when populating with a secret. Defaults to the latest version.                                                                                                      | string                                                                                                         | `"latest"`                            | No       |
+| execution_environment | Execution environment to run under. Allowed values: [`"gen1"`, `"gen2"`]                                                                                                           | string                                                                                                         | `"gen1"`                              | No       |
 | http2                 | Enable use of HTTP/2 end-to-end.                                                                                                                                                   | bool                                                                                                           | `false`                               | No       |
 | ingress               | Ingress settings for the service. Allowed values: [`"all"`, `"internal"`, `"internal-and-cloud-load-balancing"`]                                                                   | string                                                                                                         | `all`                                 | No       |
 | labels                | [Labels](https://cloud.google.com/run/docs/configuring/labels) to apply to the service.                                                                                            | map(string)                                                                                                    | `{}`                                  | No       |
 | map_domains           | Domain names to map to the service.                                                                                                                                                | set(string)                                                                                                    | `[]`                                  | No       |
 | max_instances         | Maximum number of container instances allowed to start.                                                                                                                            | number                                                                                                         | `1000`                                | No       |
-| memory                | Memory (in Mi) to allocate to containers.                                                                                                                                          | number                                                                                                         | `256`                                 | No       |
+| memory                | Memory (in Mi) to allocate to containers. If `execution_environment` is `"gen2"`, this needs to be >= 512.                                                                         | number                                                                                                         | `256`                                 | No       |
 | min_instances         | Minimum number of container instances to keep running.                                                                                                                             | number                                                                                                         | `0`                                   | No       |
 | port                  | Port on which the container is listening for incoming HTTP requests.                                                                                                               | number                                                                                                         | `8080`                                | No       |
 | project               | Google Cloud project in which to create resources.                                                                                                                                 | string                                                                                                         | `null`                                | No       |
@@ -144,6 +147,12 @@ In addition to the inputs documented above, the following values are available a
 | dns                          | DNS records to populate for mapped domains. Keys are the domains that were specified in `var.map_domains`. | map(list(object({ name = optional(string), root = string, type = string, rrdatas = set(string) }))) |
 
 # Changelog
+
+* **2.2.1**
+    * Add `run.googleapis.com/launch-stage` to ignored annotations, preventing unnecessary updates in place. 
+
+* **2.2.0**
+    * Implement [execution environment](https://cloud.google.com/run/docs/configuring/execution-environments) configuration (thanks @dennislapchenko).
 
 * **2.1.1**
     * Placed `run.googleapis.com/launch-stage` in the service's annotations, not the revision's. 
